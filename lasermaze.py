@@ -213,6 +213,7 @@ time_increment = 0
 while True: # main game loop
     current_key = ""
     current_serial = "" 
+    serial_command = ""
   
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -228,23 +229,24 @@ while True: # main game loop
         if serial_command:
             print "Serial: %s" % serial_command
             
-    if current_key == "a":
+    if current_key == "a" or serial_command == "a":
         GAME_STATE = "ARMED"
         armed = True
         GAME_TIME = 0 # actually depends. allow pause/reset
         click.play()
         activating_alarm.play()
-    elif current_key == "d":
+    elif current_key == "d" or serial_command == "d":
         armed = False
         alert = False #?
         click.play() # ugh. need another sound.
         GAME_STATE = "DISARMED"
-    elif current_key <="8" and current_key >= "1":
+    elif (current_key <="8" and current_key >= "1") or \
+		(serial_command <= "8" and serial_command >= "1"):
         if GAME_STATE == "ARMED":
             intruder_alert.play()
             alert = True
             
-    elif current_key == "x":
+    elif current_key == "x" or serial_command == "x":
         pygame.quit()
         sys.exit()            
             
