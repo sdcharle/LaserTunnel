@@ -4,7 +4,7 @@ LaserTunnel
 pygame code for the amazing Bloominglabs/Wonderlab laser tunnel project
 
 ##Overview
-This code is was written to run on a Raspberry Pi communicating via serial port w/ an Arduino that sends it 'commands':
+This code was written to run on a Raspberry Pi communicating via serial port w/ an Arduino that sends it 'commands':
 
 'a' - arm system<br/>
 'd' - disarm system<br/>
