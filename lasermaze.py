@@ -236,6 +236,7 @@ X - quit
 armed = False
 alert = False
 time_increment = 0 
+
 while True: # main game loop
     current_key = ""
     current_serial = "" 
@@ -259,9 +260,11 @@ while True: # main game loop
     if current_key == "a":
         GAME_STATE = "ARMED"
         armed = True
+        alert = False #???
         GAME_TIME = 0 # actually depends. allow pause/reset
         click.play()
         activating_alarm.play()
+        SENSOR_STATE = [0] * NUM_SENSORS
     elif current_key == "d":
         armed = False
         alert = False #?
