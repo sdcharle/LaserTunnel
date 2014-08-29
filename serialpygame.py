@@ -76,85 +76,6 @@ motion_detected = pygame.mixer.Sound("./sounds/motionDetected.ogg")
 activating_alarm = pygame.mixer.Sound("./sounds/activatingAlarm.ogg")
 intruder_alert = pygame.mixer.Sound("./sounds/IntruderAlert.ogg")
 
-"""
-
-show simple panel. Basically just: is alarm armed or not,
-and are we safe or was ALERT TRIGGERED
-
-show dots for our sensors also.
-Green for not triggered, red for triggered
-
-"""
-def draw_panel(display_surf, armed, alert):
-    w_margin = 20 # add to args?
-    h_margin = 20
-    
-    rect_width = (DISPLAY_WIDTH - 4*w_margin)/3
-    rect_height = (DISPLAY_HEIGHT - 2*h_margin)
-
-
-    ARMED_COLOR = (255,0,0)
-    DISARMED_COLOR = (0,255,0)
-
-    if armed:
-        armed_str = "ARMED"
-        armed_color = ARMED_COLOR
-    else:
-        armed_str = "DISARMED"
-        armed_color = DISARMED_COLOR
-    
-    if alert:
-        alert_str = "ALERT"
-        alert_color = ARMED_COLOR
-    else:
-        alert_str = "SECURE"
-        alert_color = DISARMED_COLOR
-       
-    display_surf.fill((30,30,30))
-    
-    big_left_width = (DISPLAY_WIDTH*2/3 - 2*w_margin)
-    
-    pygame.draw.rect(display_surf, armed_color, 
-        (w_margin, h_margin, big_left_width, 
-            DISPLAY_HEIGHT/2 - (3*h_margin/2)) ,0)
-#    pygame.draw.rect(display_surf, alert_color, (2*w_margin + rect_width, h_margin, rect_width, rect_height) ,0)
-
-    pygame.draw.rect(display_surf, (0,0,0), 
-       (3*w_margin + 2*rect_width, h_margin, rect_width, rect_height) ,0)    
-
-    text_surface_obj = medium_computer_font.render(armed_str,True,(0,0,0),armed_color)
-    text_rect_obj = text_surface_obj.get_rect()
-    text_rect_obj.center = (
-        w_margin + big_left_width/2 ,
-        DISPLAY_HEIGHT/3 - h_margin)    
-    display_surf.blit(text_surface_obj,text_rect_obj)
-
-# draw the friendly sensors
-    sensor_y = DISPLAY_HEIGHT * 3/4
-    sensor_width = big_left_width / (NUM_SENSORS + 1)
-    
-    for (idx, sens_val) in enumerate(SENSOR_STATE):
-        if SENSOR_STATE[idx]:
-            color = ARMED_COLOR
-        else:
-            color = DISARMED_COLOR
-        pygame.draw.circle(display_surf, color, (w_margin + (1+idx) * sensor_width,sensor_y),
-            big_left_width/(NUM_SENSORS * 4), 0)
-    
-#    text_surface_obj = medium_computer_font.render(alert_str,True,(0,0,0),alert_color)
-#    text_rect_obj = text_surface_obj.get_rect()
-#    text_rect_obj.center = (
-#        w_margin * 2+ rect_width*3/2 ,
-#        DISPLAY_HEIGHT/2)    
-#    display_surf.blit(text_surface_obj,text_rect_obj)
-      
-    time_str = "%02d:%02d" % (GAME_TIME/60000, (GAME_TIME % 60000)/1000)
-    time_surface_obj = big_LCD_font.render(time_str,True,(255,0,0),(0,0,0))
-    time_rect_obj = time_surface_obj.get_rect()
-    time_rect_obj.center = (
-        display_surf.get_size()[0]/2 + rect_width,display_surf.get_size()[1]/2)    
-    display_surf.blit(time_surface_obj,time_rect_obj)
- 
 def draw_splash(display_surf):
     display_surf.fill((255,255,255))
     display_surf.blit(blabs_img,(0,0))
@@ -215,12 +136,11 @@ def get_serial_command(serial_port,stuff):
     return (stuff, line) 
 
 
-
 FPS_CLOCK = pygame.time.Clock()
 cred = Credit(text,small_font,(255,255,255),(0,0,0))
 pygame.display.set_caption('Laser Tunnel')
 DISPLAY_SURF.fill((255,255,255))
-draw_splash(DISPLAY_SURF)
+#draw_splash(DISPLAY_SURF)
 GAME_STATE = "ATTRACT"
 # also ARMED DISARMED ALERT
 GAME_TIME = 0
@@ -255,14 +175,6 @@ while True: # main game loop
     current_serial = "" 
     serial_command = ""
   
-
-
-    if SERIAL_MODE == True:
-        (serial_stuff, serial_command) = get_serial_command(serial_port,serial_stuff)
-        if serial_command:
-            print "Serial: [%s] %s" % (serial_command,len(serial_command))
-            current_key = serial_command
-
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -271,47 +183,12 @@ while True: # main game loop
             current_key = str(unichr(event.key))
             # play the key sound
             print "%s pressed" % current_key
-            
-    if current_key == "a":
-        GAME_STATE = "ARMED"
-        armed = True
-        alert = False #???
-        GAME_TIME = 0 # actually depends. allow pause/reset
-        click.play()
-        activating_alarm.play()
-        SENSOR_STATE = [0] * NUM_SENSORS
-    elif current_key == "d":
-        armed = False
-        alert = False #?
-        click.play() # ugh. need another sound.
-        GAME_STATE = "DISARMED"
-        SENSOR_STATE = [0] * NUM_SENSORS
-    elif current_key and ((ord(current_key) - ord("1") < NUM_SENSORS and ord(current_key) >= ord("1"))):
-        if GAME_STATE == "ARMED":
-            SENSOR_STATE[ord(current_key) - ord("1")] = 1
-            intruder_alert.play()
-            alert = True
-            
-    elif current_key == "x" or serial_command == "x":
-        pygame.quit()
-        sys.exit()            
-            
-    if GAME_STATE == "ATTRACT":
-        if not cred.done:
-            cred.advance_credit()
-        else:
-            GAME_STATE = "DISARMED"
-            print "end of credits"
 
-# go through state-specific activities
-
-    if GAME_STATE == "ARMED":
-        if not alert:
-            GAME_TIME = GAME_TIME + time_increment
-        draw_panel(DISPLAY_SURF, armed, alert)    
- 
-    if GAME_STATE == "DISARMED":
-        draw_panel(DISPLAY_SURF, armed, alert)
-    
+    if SERIAL_MODE == True:
+        (serial_stuff, serial_command) = get_serial_command(serial_port,serial_stuff)
+        if serial_command:
+            print "Serial: [%s] %s" % (serial_command,len(serial_command))
+            current_key = serial_command
+               
     time_increment = FPS_CLOCK.tick(FPS)
     pygame.display.update()
