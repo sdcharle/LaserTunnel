@@ -14,7 +14,7 @@ from pygame import *
 import pygame.mixer
 
 from credits import Credit
-import sys
+import sys,os
 import time
 import serial
 
@@ -39,6 +39,28 @@ http://bloominglabs.org
 For Wonderlab"""
 
 #~ utiliser '\\' pour aligner les lignes de texte
+# and now framebuffer biz
+
+# Check which frame buffer drivers are available
+# Start with fbcon since directfb hangs with composite output
+drivers = ['fbcon', 'directfb', 'svgalib']
+found = False
+for driver in drivers:
+    print "trying driver %s" % driver
+    # Make sure that SDL_VIDEODRIVER is set
+    if not os.getenv('SDL_VIDEODRIVER'):
+        os.putenv('SDL_VIDEODRIVER', driver)
+    try:
+        pygame.display.init()
+    except pygame.error:
+        print 'Driver: {0} failed.'.format(driver)
+        continue
+    found = True
+    break
+    
+if not found:
+    raise Exception('No suitable video driver found!')
+
 
 # key constants
 DISPLAY_WIDTH = 990
@@ -67,10 +89,10 @@ wonderlab_img = pygame.image.load("./pix/wonderlab400x128.png")
 blabs_img = pygame.image.load("./pix/blabsweirdfont990x180.png")
 
 #sounds - pre init solved laggy sounds (mostly)
-pygame.mixer.pre_init(44100,-16,2 ,256)
+pygame.mixer.pre_init(44100,-16,2 ,512)
 pygame.init()
 pygame.mixer.music.set_volume(1)
-
+pygame.mouse.set_visible(False)
 click = pygame.mixer.Sound("./sounds/goodClick.ogg")
 motion_detected = pygame.mixer.Sound("./sounds/motionDetected.ogg")
 activating_alarm = pygame.mixer.Sound("./sounds/activatingAlarm.ogg")
