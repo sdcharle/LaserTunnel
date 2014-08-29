@@ -40,27 +40,28 @@ For Wonderlab"""
 
 #~ utiliser '\\' pour aligner les lignes de texte
 # and now framebuffer biz
+USE_FRAMEBUFFER = False
 
 # Check which frame buffer drivers are available
 # Start with fbcon since directfb hangs with composite output
 drivers = ['fbcon', 'directfb', 'svgalib']
 found = False
-for driver in drivers:
-    print "trying driver %s" % driver
-    # Make sure that SDL_VIDEODRIVER is set
-    if not os.getenv('SDL_VIDEODRIVER'):
-        os.putenv('SDL_VIDEODRIVER', driver)
-    try:
-        pygame.display.init()
-    except pygame.error:
-        print 'Driver: {0} failed.'.format(driver)
-        continue
-    found = True
-    break
+if USE_FRAMEBUFFER:
+    for driver in drivers:
+        print "trying driver %s" % driver
+        # Make sure that SDL_VIDEODRIVER is set
+        if not os.getenv('SDL_VIDEODRIVER'):
+            os.putenv('SDL_VIDEODRIVER', driver)
+        try:
+            pygame.display.init()
+        except pygame.error:
+            print 'Driver: {0} failed.'.format(driver)
+            continue
+        found = True
+        break
     
-if not found:
-    raise Exception('No suitable video driver found!')
-
+    if not found:
+        raise Exception('No suitable video driver found!')
 
 # key constants
 DISPLAY_WIDTH = 990
