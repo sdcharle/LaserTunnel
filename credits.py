@@ -5,10 +5,10 @@ from pygame import *
 font.init()
 
 class Credit:
-    def __init__(self,text,font,text_color,bg_color):
+    def __init__(self,text,font,text_color,bg_color, surface_origin, surface_size):
         self.done = False
         self.font = font 
-        
+        self.surface_origin = surface_origin
         try: text = text.decode('utf-8')
         except: pass
         
@@ -18,7 +18,8 @@ class Credit:
         try: self.bg_color = Color(bg_color)
         except: self.bg_color = Color(*bg_color) 
 
-        self.scr = display.get_surface()
+        self.scr = Surface((surface_size))
+        #display.get_surface()
         self.scrrect = self.scr.get_rect()
         self.bg = self.scr.copy() # ???
 
@@ -26,7 +27,7 @@ class Credit:
         Rright = self.scrrect.centerx + w*3
         Rleft = self.scrrect.centerx - w*3
 
-        self.foo = []
+        self.text_array = []
         for i,l in enumerate(text.splitlines()):
             a,b,c = l.partition('\\')
             u = False
@@ -37,7 +38,7 @@ class Credit:
                 rect = Rect((0,0),self.font.size(a))
                 if b: rect.topright = Rleft,self.scrrect.bottom+h*i
                 else: rect.midtop = self.scrrect.centerx,self.scrrect.bottom+h*i
-                self.foo.append([a,rect,u])
+                self.text_array.append([a,rect,u])
             u = False
             if c:
                 if c.startswith('_') and c.endswith('_'):
@@ -45,22 +46,24 @@ class Credit:
                     c = c.strip('_')
                 rect = Rect((0,0),self.font.size(c))
                 rect.topleft = Rright,self.scrrect.bottom+h*i
-                self.foo.append([c,rect,u])
+                self.text_array.append([c,rect,u])
 
         self.y = 0
-        self.joo = [x for x in self.foo]
+        self.text_copy = [x for x in self.text_array]
 
+    def reset(self):
+		self.text_array = [x for x in self.text_copy]
 
     def advance_credit(self):
         self.scr.fill(self.bg_color)
         self.y -= 2
-        for p in self.foo[:]:
+        for p in self.text_array[:]:
             r = p[1].move(0,self.y)
             if r.bottom < 0:
-                self.foo.pop(0)
-                if not self.foo:
+                self.text_array.pop(0)
+                if not self.text_array:
                   self.done = True
-                  self.foo = [x for x in self.joo]
+                  self.text_array = [x for x in self.text_copy]
                   self.y = 0
                 continue
             if not isinstance(p[0],Surface):
