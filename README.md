@@ -9,7 +9,7 @@ This code was written to run on a Raspberry Pi communicating via serial port w/ 
 'a' - arm system<br/>
 'd' - disarm system<br/>
 1-8 - which sensor was triggered<br/>
-'x' - quits program
+'r' - quits program
 
 In the event there is no Arduino attached there is a 'debug' mode where you can just type those things on the keyboard.
 
