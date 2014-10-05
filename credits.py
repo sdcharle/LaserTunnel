@@ -73,8 +73,4 @@ class Credit:
             self.scr.blit(p[0],r)
             if r.top >= self.scrrect.bottom:
                 break
- #       self.clk.tick(70)
- #       display.flip()
- #       self.scr.fill(self.bg_color)
-#        self.scr.blit(self.bg,(0,0))
 

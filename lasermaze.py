@@ -4,11 +4,10 @@
 Code for the display for the Bloominglabs/Wonderlab Laser Tunnel
 
 SDC 8/21/2014
-
-TODO:
-
 """
 
+from subprocess import call
+import RPi.GPIO as GPIO
 import pygame
 from pygame import *
 import pygame.mixer
@@ -31,6 +30,12 @@ _Construction Team_\\Jay Sissom
 _Arduino and Raspberry Pi Programming_\\Jay Sissom
 \\Stephen Charlesworth
 
+_Thanks to_\\Bob Fargas
+\\Nathan Heald
+\\Jordan Loewe
+\\Jenett Tilottson
+\\Paul Wolfe
+
 _                                                 _
 
 ©Copyright 2014 by Bloominglabs
@@ -51,6 +56,13 @@ _Software_
 Jay Sissom
 Stephen Charlesworth
 
+_Thanks to_
+Bob Fargas
+Nathan Heald
+Jordan Loewe
+Jenett Tilottson
+Paul Wolfe
+
 _                                                 _
 
 ©Copyright 2014 by Bloominglabs
@@ -60,7 +72,7 @@ For Wonderlab"""
 
 #~ utiliser '\\' pour aligner les lignes de texte
 # and now framebuffer biz
-USE_FRAMEBUFFER = False
+USE_FRAMEBUFFER = True # False
 
 # Check which frame buffer drivers are available
 # Start with fbcon since directfb hangs with composite output
@@ -96,7 +108,7 @@ DEBUG=False
 
 #serial stuff. for debugging purposes also allows keyboard input
 SERIAL_MODE = False
-SERIAL_PORT = "/dev/ttyACM0" #"/dev/tty.usbmodem1421" # change as appropriate
+SERIAL_PORT = "/dev/ttyAMA0" #"/dev/tty.usbmodem1421" # change as appropriate
 
 # Fonts
 small_font = font.Font("./fonts/Roboto-MediumItalic.ttf",20)
@@ -106,7 +118,7 @@ huge_font = font.Font("./fonts/Roboto-MediumItalic.ttf",80)
 big_computer_font = font.Font("./fonts/Computer.ttf",100)
 medium_computer_font = font.Font("./fonts/Computer.ttf",50)
 big_LCD_font = font.Font("./fonts/LCD2 Bold.ttf",80)
-
+small_computer_font = font.Font("./fonts/Computer.ttf",12)
 # Images
 wonderlab_img = pygame.image.load("./pix/wonderlab400x128.png")
 blabs_img = pygame.image.load("./pix/blabsweirdfont990x180.png")
@@ -123,8 +135,15 @@ pygame.mouse.set_visible(False)
 click = pygame.mixer.Sound("./sounds/goodClick.ogg")
 motion_detected = pygame.mixer.Sound("./sounds/motionDetected.ogg")
 activating_alarm = pygame.mixer.Sound("./sounds/activatingAlarm.ogg")
-intruder_alert = pygame.mixer.Sound("./sounds/powerUp.ogg")
+#intruder_alert = pygame.mixer.Sound("./sounds/powerUp.ogg")
+# Use this sound for alarm
+intruder_alert = pygame.mixer.Sound("./sounds/battleStations.ogg")
 #pygame.mixer.Sound("./sounds/IntruderAlert.ogg")
+
+# GPIO
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(7,GPIO.OUT)
+GPIO.output(7,False)
 
 # for panel. need to clean up tho
 w_margin = 20 
@@ -268,7 +287,7 @@ def get_serial_command(serial_port,stuff):
 FPS_CLOCK = pygame.time.Clock()
 cred = Credit(text,small_font,(255,255,255),(0,0,0),(0,0),(DISPLAY_WIDTH,DISPLAY_HEIGHT))
 # note there's kind of a dependency btw this and draw panel, should clean up
-small_creds = Credit(small_text,small_font,(255,255,255),(0,0,0),
+small_creds = Credit(small_text,small_computer_font,(255,255,255),(0,0,0),
 		(3*w_margin + 2*(DISPLAY_WIDTH - 4*w_margin)/3 ,h_margin),
         ((DISPLAY_WIDTH - 4*w_margin)/3,(DISPLAY_HEIGHT - 2*h_margin)/2))
         
@@ -327,21 +346,26 @@ while True: # main game loop
                 print "%s pressed" % current_key
             
     if current_key.upper() == "A":
+        GPIO.output(7,False)
         GAME_STATE = "ARMED"
         armed = True
         alert = False #???
         GAME_TIME = 0 # actually depends. allow pause/reset
         click.play()
         activating_alarm.play()
+        intruder_alert.stop()
         SENSOR_STATE = [0] * NUM_SENSORS
     elif current_key.upper() == "D":
+        GPIO.output(7,False)
         armed = False
         alert = False #?
         click.play() # ugh. need another sound.
+        intruder_alert.stop()
         GAME_STATE = "DISARMED"
         SENSOR_STATE = [0] * NUM_SENSORS
     elif current_key and ((ord(current_key) - ord("1") < NUM_SENSORS and ord(current_key) >= ord("1"))):
         if GAME_STATE == "ARMED":
+            GPIO.output(7,True)
             SENSOR_STATE[ord(current_key) - ord("1")] = 1
             if not fx_sounds.get_busy():
                 intruder_alert.play()
@@ -349,7 +373,9 @@ while True: # main game loop
             
     elif current_key.upper() == "R":
         pygame.quit()
-        sys.exit()            
+        if serial_command.upper() == "R":
+            call(["/sbin/shutdown","-h","now"])
+        sys.exit()
             
     if GAME_STATE == "ATTRACT":
         if not cred.done:
